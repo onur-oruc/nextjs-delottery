@@ -1,21 +1,46 @@
-import Head from "next/head"
+import Image from "next/image"
 import styles from "../styles/Home.module.css"
-//import ManualHeader from "../components/ManualHeader"
-import Header from "../components/Header"
-import LotteryEntrance from "../components/LotteryEntrance"
+import { useMoralisQuery, useMoralis } from "react-moralis"
+import NFTBox from "../components/NFTBox"
 
 export default function Home() {
+    const { isWeb3Enabled } = useMoralis()
+    const { data: listedNfts, isFetching: fetchingListedNfts } = useMoralisQuery(
+        "ActiveItem",
+        (query) => query.limit(10).descending("tokenId")
+    )
+    console.log("listed nfts: ", listedNfts)
+
     return (
-        <div className={styles.container}>
-            <Head>
-                <title>Decentralized Lottery - DeLottery</title>
-                <meta name="description" content="DeLottery" />
-                <link rel="icon" href="/favicon.ico" />
-            </Head>
-            {/* <ManualHeader /> */}
-            <Header />
-            <LotteryEntrance />
-            {/*header / connect button / nav bar*/}
+        <div className="container mx-auto">
+            <h1 className="py-4 px-4 font-bold text-2xl">Recently Listed</h1>
+            <div className="flex flex-wrap">
+                {isWeb3Enabled ? (
+                    fetchingListedNfts ? (
+                        <div>Loading...</div>
+                    ) : (
+                        listedNfts.map((nft) => {
+                            console.log(nft.attributes)
+                            const { price, nftAddress, tokenId, marketplaceAddress, seller } =
+                                nft.attributes
+                            return (
+                                <div>
+                                    <NFTBox
+                                        price={price}
+                                        nftAddress={nftAddress}
+                                        tokenId={tokenId}
+                                        marketplaceAddress={marketplaceAddress}
+                                        seller={seller}
+                                        key={`${nftAddress}${tokenId}`}
+                                    />
+                                </div>
+                            )
+                        })
+                    )
+                ) : (
+                    <div>Web3 Currently Not Enabled</div>
+                )}
+            </div>
         </div>
     )
 }
